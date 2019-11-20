@@ -1,257 +1,138 @@
-<?xml version='1.0'?>
+<?xml version="1.0"?>
+<!--
+Software License Agreement (BSD)
 
-<robot name="husky" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:property name="cameraSize" value="0.05"/>
-    <xacro:property name="cameraMass" value="0.01"/>
-    <xacro:arg name="robot_namespace" default=""/>
-    <xacro:property name="namespace" value="$(arg robot_namespace)" />
-    <xacro:include filename="$(find husky_description)/urdf/macros.xacro" />
+\file      husky.urdf.xacro
+\authors   Paul Bovbel <pbovbel@clearpathrobotics.com>, Devon Ash <dash@clearpathrobotics.com>
+\copyright Copyright (c) 2015, Clearpath Robotics, Inc., All rights reserved.
 
-<!-- Base Frame -->
-    <link name='base_link'>
-      <inertial>
-          <mass value="1"/>
-          <origin xyz="0 0 0" rpy=" 0 0 0"/>
-          <inertia 
-          ixx="1" ixy="0.0" ixz="0"
-          iyy="1" iyz="0.0"
-          izz="1"
-          />
-        </inertial> 
-        <collision name='collision'>
-          <origin xyz="0.1575 0.0775 0.08" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <box size="0.315 0.155 0.215" />
-          </geometry>
-        </collision>
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+   following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+   following disclaimer in the documentation and/or other materials provided with the distribution.
+ * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
+   products derived from this software without specific prior written permission.
 
-        <visual name='base_link_visual'>
-          <origin xyz="0.1575 0.0775 0.08" rpy="1.5708 0 1.5708"/>
-          <geometry>
-              <box size="0.315 0.155 0.215" />
-          </geometry>
-          <material name="black">
-           <color rgba="0 0 0 0.5"/>
-         </material>
-        </visual>
-    </link>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
+RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, IN-
+DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<robot name="husky" xmlns:xacro="http://ros.org/wiki/xacro">
 
-   <link name="rear_left_wheel">
-        <collision name="collision">
-          <origin xyz="0.01 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>10</mu>
-                <mu2>10</mu2>
-              </ode>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="rear_left_wheel_visual">
-          <origin xyz="0.01 0 0" rpy="1.5708 0 1.5708"/>     
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-        </visual>
-        <inertial>
-          <origin xyz="0 0 0"/>
-          <mass value="0.5"/>
-          <inertia 
-          ixx="0.005" ixy="0.0" ixz="0.0" 
-          iyy="0.01" iyz="0.0" 
-          izz="0.005"/>
-        </inertial>
-    </link>
+  <xacro:arg name="laser_enabled" default="false" />
+  <xacro:arg name="laser_xyz" default="$(optenv HUSKY_LMS1XX_XYZ 0.13 0.0 0.1575)" />
+  <xacro:arg name="laser_rpy" default="$(optenv HUSKY_LMS1XX_RPY 1.5708 0 1.5708)" />
 
-    <link name="rear_right_wheel">
-        <collision name="collision">
-          <origin xyz="0.31 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>10</mu>
-                <mu2>10</mu2>
-              </ode>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="rear_right_wheel_visual">
-          <origin xyz="0.31 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-        </visual>
-        <inertial>
-          <origin xyz="0 0 0"/>
-          <mass value="0.5"/>
-          <inertia 
-          ixx="0.005" ixy="0.0" ixz="0.0" 
-          iyy="0.01" iyz="0.0" 
-          izz="0.005"/>
-        </inertial>
-    </link>
+<!--   <xacro:arg name="kinect_enabled" default="false" />
+  <xacro:arg name="kinect_xyz" default="$(optenv HUSKY_KINECT_XYZ 0 0 0)" />
+  <xacro:arg name="kinect_rpy" default="$(optenv HUSKY_KINECT_RPY 0 0.18 3.14)" /> -->
 
-    <joint type="continuous" name="rear_left_wheel_hinge">
-        <child link="rear_left_wheel"/>
-        <parent link="base_link"/>
-        <!-- <parent link="axle_RL"/> -->
-        <axis xyz="1 0 0" rpy="0 0 0"/>
-        <limit effort="1" velocity="10"/>
-        <joint_properties damping="5.0" friction="1.0"/>
-    </joint>
-    <transmission name="rear_left_wheel_trans" type="SimpleTransmission">
-        <type>transmission_interface/SimpleTransmission</type>
-        <actuator name="rear_left_wheel_motor">
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-        <joint name="rear_left_wheel_hinge">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-    </transmission>
+<!--   <xacro:property name="husky_front_bumper_extend" value="$(optenv HUSKY_FRONT_BUMPER_EXTEND 0)" />
+  <xacro:property name="husky_rear_bumper_extend" value="$(optenv HUSKY_REAR_BUMPER_EXTEND 0)" /> -->
 
-    <joint type="continuous" name="rear_right_wheel_hinge">
-        <child link="rear_right_wheel"/>
-        <parent link="base_link"/>
-        <!-- <parent link="axle_RR"/> -->
-        <axis xyz="1 0 0" rpy="0 0 0"/>
-        <limit effort="1" velocity="10"/>
-        <joint_properties damping="5.0" friction="1.0"/>
-    </joint>
-    <transmission name="rear_right_wheel_trans" type="SimpleTransmission">
-        <type>transmission_interface/SimpleTransmission</type>
-        <actuator name="rear_right_wheel_motor">
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-        <joint name="rear_right_wheel_hinge">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        </transmission>
+  <xacro:arg name="robot_namespace" default="/" />
+  <xacro:arg name="urdf_extras" default="empty.urdf" />
 
+  <!-- Included URDF/XACRO Files -->
+  <!-- <xacro:include filename="$(find husky_description)/urdf/decorations.urdf.xacro" /> -->
+  <xacro:include filename="$(find husky_description)/urdf/wheel.urdf.xacro" />
 
-   <link name="front_left_wheel">
-        <collision name="collision">
-          <origin xyz="0.01 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>10</mu>
-                <mu2>10</mu2>
-              </ode>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="front_left_wheel_visual">
-          <origin xyz="0.01 0 0" rpy="1.5708 0 1.5708"/>     
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-        </visual>
-        <inertial>
-          <origin xyz="0 0 0"/>
-          <mass value="0.5"/>
-          <inertia 
-          ixx="0.005" ixy="0.0" ixz="0.0" 
-          iyy="0.01" iyz="0.0" 
-          izz="0.005"/>
-        </inertial>
-    </link>
+<!--   <xacro:include filename="$(find husky_description)/urdf/accessories/kinect_camera.urdf.xacro"/>
+  <xacro:include filename="$(find husky_description)/urdf/accessories/sick_lms1xx_mount.urdf.xacro"/>
+ -->  <xacro:include filename="$(find husky_description)/urdf/accessories/sensor_arch.urdf.xacro"/>
 
-    <link name="front_right_wheel">
-        <collision name="collision">
-          <origin xyz="0.31 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>10</mu>
-                <mu2>10</mu2>
-              </ode>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="front_right_wheel_visual">
-          <origin xyz="0.31 0 0" rpy="1.5708 0 1.5708"/>
-          <geometry>
-            <cylinder length="0.04" radius="0.055"/>
-          </geometry>
-        </visual>
-        <inertial>
-          <origin xyz="0 0 0"/>
-          <mass value="0.5"/>
-          <inertia 
-          ixx="0.005" ixy="0.0" ixz="0.0" 
-          iyy="0.01" iyz="0.0" 
-          izz="0.005"/>
-        </inertial>
-    </link>
+  <xacro:property name="M_PI" value="3.14159"/>
 
-    <joint type="continuous" name="front_left_wheel_hinge">
-        <child link="front_left_wheel"/>
-        <parent link="base_link"/>
-        <origin xyz="0 0.16 0" />
-        <axis xyz="1 0 0" rpy="0 0 0"/>
-        <limit effort="1" velocity="10"/>
-        <joint_properties damping="5.0" friction="1.0"/>
-    </joint>
-    <transmission name="front_left_wheel_trans" type="SimpleTransmission">
-        <type>transmission_interface/SimpleTransmission</type>
-        <actuator name="front_left_wheel_motor">
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-        <joint name="front_left_wheel_hinge">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-    </transmission>
+  <!-- Base Size -->
+  <xacro:property name="base_x_size" value="0.3150000" />
+  <xacro:property name="base_y_size" value="0.2150000" />
+  <xacro:property name="base_z_size" value="0.1550000" />
 
-    <joint type="continuous" name="front_right_wheel_hinge">
-        <child link="front_right_wheel"/>
-        <parent link="base_link"/>
-        <origin xyz="0 0.16 0" />
-        <axis xyz="1 0 0" rpy="0 0 0"/>
-        <limit effort="1" velocity="10"/>
-        <joint_properties damping="5.0" friction="1.0"/>
-    </joint>
-    <transmission name="front_right_wheel_trans" type="SimpleTransmission">
-        <type>transmission_interface/SimpleTransmission</type>
-        <actuator name="front_right_wheel_motor">
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-        <joint name="front_right_wheel_hinge">
-          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-    </transmission>
+  <!-- Wheel Mounting Positions -->
+  <xacro:property name="wheelbase" value="0.5120" />
+  <xacro:property name="track" value="0.5708" />
+  <xacro:property name="wheel_vertical_offset" value="0.03282" />
 
+  <!-- Wheel Properties -->
+  <xacro:property name="wheel_length" value="0.04" />
+  <xacro:property name="wheel_radius" value="0.055" />
 
-<!-- Camera -->
+  <!-- Base link is the center of the robot's bottom plate -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.08" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://husky_description/meshes/base_link.dae" />
+        <!-- <box size="${base_x_size} ${base_y_size} ${base_z_size}"/> -->
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.08" rpy="0 0 0" />
+      <geometry>
+        <box size="${base_x_size} ${base_y_size} ${base_z_size}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Base footprint is on the ground under the robot -->
+
+  <!-- Interial link stores the robot's inertial information -->
+  <link name="inertial_link">
+    <inertial>
+      <mass value="46.034" />
+      <origin xyz="-0.00065 -0.085 0.062" />
+      <inertia ixx="0.6022" ixy="-0.02364" ixz="-0.1197" iyy="1.7386" iyz="-0.001544" izz="2.0296" />
+    </inertial>
+  </link>
+
+  <joint name="inertial_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="inertial_link" />
+  </joint>
+
+  <!-- IMU Link is the standard mounting position for the UM6 IMU.-->
+  <!-- Can be modified with environment variables in /etc/ros/setup.bash -->
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="$(optenv HUSKY_IMU_XYZ 0.19 0 0.149)" rpy="$(optenv HUSKY_IMU_RPY 0 -1.5708 3.1416)" />
+    <parent link="base_link" />
+    <child link="imu_link" />
+  </joint>
+  <gazebo reference="imu_link">
+  </gazebo>
+
+  <!-- Husky wheel macros -->
+  <xacro:husky_wheel wheel_prefix="front_left">
+    <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+  </xacro:husky_wheel>
+  <xacro:husky_wheel wheel_prefix="front_right">
+    <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+  </xacro:husky_wheel>
+  <xacro:husky_wheel wheel_prefix="rear_left">
+    <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+  </xacro:husky_wheel>
+  <xacro:husky_wheel wheel_prefix="rear_right">
+    <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+  </xacro:husky_wheel>
+
+  <!-- Camera -->
     <joint name="astra_joint_base" type="fixed">
         <axis xyz="0 0 0" />
         <!-- <origin xyz="-0.03 0 0.18" rpy="0 0 0"/> -->
         <parent link="base_link"/>
-        <child link="camera_stand"/>
-    </joint>
-
-    <joint name="astra_joint" type="fixed">
-        <axis xyz="0 0 0" />
-        <!-- <origin xyz="-0.03 0 0.18" rpy="0 0 0"/> -->
-        <parent link="camera_stand"/>
         <child link="camera_link"/>
     </joint>
 
     <link name="camera_link">
         <collision>
-          <origin xyz="0.1575 0 0.33" rpy="1.5708 0 -3.14"/>
+          <origin xyz="0 0 0.33" rpy="1.5708 0 1.5708"/>
           <geometry>0
             <box size="0.001 0.001 0.001"/>
           </geometry>
@@ -260,101 +141,40 @@
           </material>
         </collision>
         <visual>
-          <origin xyz="0.1575 0 0.33" rpy="1.5708 0 -3.14"/>
+          <origin xyz="0 0 0.33" rpy="1.5708 0 1.5708"/>
           <geometry>
             <mesh filename="package://husky_description/meshes/astra.dae" scale="0.001 0.001 0.001" />
           </geometry>
         </visual>
-   <!--      <inertial>
-          <mass value="1e-5" />
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </inertial> -->
     </link>
-
-    <link name='camera_stand'>
-    <!--       <inertial>
-          <mass value="5"/>
-          <origin xyz="0 0 0.5" rpy=" 0 0 0"/>
-          <inertia 
-          ixx="100" ixy="0.0" ixz="0"
-          iyy="100" iyz="0.0"
-          izz="100"
-          />
-        </inertial> -->
-
-        <collision name='collision'>
-          <origin xyz="0.1575 0 0.23" rpy="0 0 1.5708"/>
-          <geometry>
-            <box size="0.04 0.02 0.15" />
-          </geometry>
-        </collision>
-
-        <visual name='base_link_visual'>
-          <origin xyz="0.1575 0 0.23" rpy="0 0 1.5708"/>
-          <geometry>
-              <box size="0.04 0.02 0.15" />
-          </geometry>
-          <material name="black">
-           <color rgba="0 0 0 0.5"/>
-         </material>
-        </visual>
-    </link>
-
-    <!-- <joint name="camera_optical_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
-        <parent link="camera_link"/>
-        <child link="camera_rgb_frame"/>
-    </joint>
-
-    <link name="camera_rgb_frame">
-    </link>
-
-    <joint name="camera_depth_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
-        <parent link="camera_link"/>
-        <child link="camera_depth_frame"/>
-    </joint>
-
-    <link name="camera_depth_frame">
-    </link> -->
-
 
 <!-- rplidar Laser -->
-  <joint name="rplidar_joint" type="fixed">
-    <axis xyz="0 0 1" />
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="base_link"/>
-    <child link="laser"/>
-  </joint>
+	<sick_lms1xx_mount prefix="base"/>
+
+    <sick_lms1xx frame="base_laser" topic="scan" robot_namespace="$(arg robot_namespace)"/>
+
+    <joint name="laser_mount_joint" type="fixed">
+      <origin xyz="$(arg laser_xyz)" rpy="$(arg laser_rpy)" />
+      <parent link="base_link" />
+      <child link="laser" />
+    </joint>
 
   <link name="laser">
     <collision>
-      <origin xyz="0.1575 0.19 0.1575" rpy="1.5708 0 3.14"/>
+      <!-- <origin xyz="0.1575 0 0.1575" rpy="1.5708 0 3.14"/> -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://husky_description/meshes/rplidar.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </collision>
 
     <visual>
-      <origin xyz="0.1575 0.19 0.1575" rpy="1.5708 0 3.14"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://husky_description/meshes/rplidar.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
-
-  <!--   <inertial>
-      <mass value="1e-5" />
-      <origin xyz="0 0 0.058" rpy="1.5708 0 4.71"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-    </inertial>
-  -->  </link>
-  <link name="imu_link"/>
-  <joint name="imu_joint" type="fixed">
-    <origin xyz="$(optenv HUSKY_IMU_XYZ 0.19 0 0.149)" rpy="$(optenv HUSKY_IMU_RPY 0 -1.5708 3.1416)" />
-    <parent link="base_link" />
-    <child link="imu_link" />
-  </joint>
+   </link>
 
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
@@ -362,32 +182,38 @@
     </plugin>
   </gazebo>
 
-  <plugin name="imu_controller" filename="libhector_gazebo_ros_imu.so">
-    <robotNamespace>$(arg robot_namespace)</robotNamespace>
-    <updateRate>50.0</updateRate>
-    <bodyName>base_link</bodyName>
-    <topicName>imu/data</topicName>
-    <accelDrift>0.005 0.005 0.005</accelDrift>
-    <accelGaussianNoise>0.005 0.005 0.005</accelGaussianNoise>
-    <rateDrift>0.005 0.005 0.005 </rateDrift>
-    <rateGaussianNoise>0.005 0.005 0.005 </rateGaussianNoise>
-    <headingDrift>0.005</headingDrift>
-    <headingGaussianNoise>0.005</headingGaussianNoise>
-  </plugin>
+  <gazebo>
+    <plugin name="imu_controller" filename="libhector_gazebo_ros_imu.so">
+      <robotNamespace>$(arg robot_namespace)</robotNamespace>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>imu/data</topicName>
+      <accelDrift>0.005 0.005 0.005</accelDrift>
+      <accelGaussianNoise>0.005 0.005 0.005</accelGaussianNoise>
+      <rateDrift>0.005 0.005 0.005 </rateDrift>
+      <rateGaussianNoise>0.005 0.005 0.005 </rateGaussianNoise>
+      <headingDrift>0.005</headingDrift>
+      <headingGaussianNoise>0.005</headingGaussianNoise>
+    </plugin>
+  </gazebo>
 
-  <plugin name="gps_controller" filename="libhector_gazebo_ros_gps.so">
-    <robotNamespace>$(arg robot_namespace)</robotNamespace>
-    <updateRate>40</updateRate>
-    <bodyName>base_link</bodyName>
-    <frameId>base_link</frameId>
-    <topicName>navsat/fix</topicName>
-    <velocityTopicName>navsat/vel</velocityTopicName>
-    <referenceLatitude>49.9</referenceLatitude>
-    <referenceLongitude>8.9</referenceLongitude>
-    <referenceHeading>0</referenceHeading>
-    <referenceAltitude>0</referenceAltitude>
-    <drift>0.0001 0.0001 0.0001</drift>
-  </plugin>
+  <gazebo>
+    <plugin name="gps_controller" filename="libhector_gazebo_ros_gps.so">
+      <robotNamespace>$(arg robot_namespace)</robotNamespace>
+      <updateRate>40</updateRate>
+      <bodyName>base_link</bodyName>
+      <frameId>base_link</frameId>
+      <topicName>navsat/fix</topicName>
+      <velocityTopicName>navsat/vel</velocityTopicName>
+      <referenceLatitude>49.9</referenceLatitude>
+      <referenceLongitude>8.9</referenceLongitude>
+      <referenceHeading>0</referenceHeading>
+      <referenceAltitude>0</referenceAltitude>
+      <drift>0.0001 0.0001 0.0001</drift>
+    </plugin>
+  </gazebo>
 
+  <!-- Optional custom includes. -->
+  <xacro:include filename="$(arg urdf_extras)" />
 
 </robot>
